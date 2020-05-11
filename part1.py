@@ -13,49 +13,53 @@ def worker():
     while True:
         if q.empty():
             continue
+
         item = q.get()
-        print(item)
         if simulator == 'SJF':
             item = item[1]
-            print(FAIL + f'SJF p-{item.process_id} {time.time() - start_time}')
-        item.state = "run"
-        time_in = time.time() - start_time
+
+        # get the process from ready queue and put it in the cpu
+        item.state = "run"                  # chane the state of the process
+        time_in = time.time() - start_time  # take the time when the process entered the cpu
         print(OKBLUE + f'Working on {item.process_id}' + ENDC)
+
+        # work of the state process by waiting CPU Burst of the process
         wating_time = table[table["Process ID"] == item.process_id]["CPU Burst"].item()
         time.sleep(time_unit * wating_time)
-        time_out = time.time() - start_time
+        time_out = time.time() - start_time  # take the time when the process leave the cpu
         print(OKGREEN + f'Finished {item.process_id} at {time_out} : {int(time_out * 10)}' + ENDC)
+
+        # recoded the result
         ct.append(int(time_out * 10))
         result.append((item.process_id, int(time_in * 10), int(time_out * 10)))
+
+        # remove the process and free the memory from it
         map_unit.remove_process(item.page_table)
         q.task_done()
-        print(not q.empty())
         if q.empty():
             continue
         time.sleep(CS * time_unit)
-        print(UNDERLINE + "waiting" + ENDC)
 
 
 # read the data and and put it in a table
 information, table = read_data()
 physical_mem_size, page_size, round_Q, CS = information
-time_unit = 0.1
-start_time = None
 table = table.sort_values(by=['Arrival Time']).reset_index(drop=True)
 
-frame_num = int(physical_mem_size / page_size)  # number of frame
+# general variables for cpu time unit and refrain time
+time_unit = 0.1
+start_time = None
+simulator = None        # name of the cpu  simulator
+q = queue.Queue()       # ready queue
 
-simulator = 'FCFS'
-q = queue.Queue()
+threading.Thread(target=worker, daemon=True).start()    # run worker function in diffract thread
+map_unit = PageMap(physical_mem_size, page_size)        # map unit between pages and frames
 
-threading.Thread(target=worker, daemon=True).start()
-map_unit = PageMap(physical_mem_size, page_size)
 
-# FCFS simulator model
-
+# iteration for all simulator mode and find the result for each of them
 for sem in simulator_list:
-    result = []
-    ct = []
+    result = []     # final result
+    ct = []         # complete time for each process
     i = 0
     print(q.all_tasks_done)
     if sem == 'SJF':
