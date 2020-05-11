@@ -21,21 +21,20 @@ def worker():
         # get the process from ready queue and put it in the cpu
         item.state = "run"                  # chane the state of the process
         time_in = time.time() - start_time  # take the time when the process entered the cpu
+        finished = True
         print(OKBLUE + f'Working on {item.process_id}' + ENDC)
 
         # work of the state process by waiting CPU Burst of the process
         # print(simulator == 'RR')
         if simulator == 'RR':
-            # print(q.qsize())
-            # print(burst_time[item.process_id] - round_Q > 0,burst_time[item.process_id],
-            #       burst_time[item.process_id] - round_Q )
             if burst_time[item.process_id] - round_Q > 0:
-                # print('added')
                 wating_time = round_Q
                 burst_time[item.process_id] -= round_Q
                 q.put(item)
+                finished = False
             else:
                 wating_time = burst_time[item.process_id]
+                finished = True
         else:
             wating_time = table[table["Process ID"] == item.process_id]["CPU Burst"].item()
         time.sleep(time_unit * wating_time)
@@ -43,7 +42,8 @@ def worker():
         print(OKGREEN + f'Finished {item.process_id} at {time_out} : {int(time_out * 10)}' + ENDC)
 
         # recoded the result
-        ct.append(int(time_out * 10))
+        if finished:
+            ct.append(int(time_out * 10))
         result.append((item.process_id, int(time_in * 10), int(time_out * 10)))
 
         # remove the process and free the memory from it
@@ -98,6 +98,7 @@ for sem in simulator_list:
     q.join()
 
     gantt_charts(result, sem)
-    # awt = average_waiting_time(table["Arrival Time"].to_numpy(),
-    #                            table["CPU Burst"].to_numpy(), np.array(ct))
-    # print('\n' + WARNING + f'average waiting time for FCFS : {awt}' + ENDC)
+    awt = average_waiting_time(table["Arrival Time"].to_numpy(),
+                               table["CPU Burst"].to_numpy(), np.array(ct))
+    print('\n' + WARNING + f'average waiting time for {sem} : {awt}' + ENDC)
+    print('\n' + WARNING + f'cpu utilization for {sem} : {cpu_utilization(result)}' + ENDC+'\n')

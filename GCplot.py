@@ -4,7 +4,6 @@ from util.const import *
 
 
 def gantt_charts(data, title):
-    print(data)
     ticks = []
     leg_list = []
     fig = plt.figure(figsize=[8.2, 4.8])

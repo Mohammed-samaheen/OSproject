@@ -19,3 +19,8 @@ def read_data(file_name='processes.txt'):
 def average_waiting_time(at, bt, ct):
     tat = ct - at
     return (tat - bt).mean()
+
+
+def cpu_utilization(data):
+    process_time = sum([x[2] - x[1] for x in data])
+    return (process_time / data[-1][2]) * 100
