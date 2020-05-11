@@ -25,11 +25,13 @@ q = queue.Queue()
 
 def worker():
     while True:
-        print(UNDERLINE + "open" + ENDC)
+        if q.empty():
+            continue
         item = q.get()
+        print(item)
         if simulator == 'SJF':
             item = item[1]
-            print(FAIL+f'SJF p-{item.process_id} {time.time()-start_time}')
+            print(FAIL + f'SJF p-{item.process_id} {time.time() - start_time}')
         item.state = "run"
         time_in = time.time() - start_time
         print(OKBLUE + f'Working on {item.process_id}' + ENDC)
@@ -43,7 +45,6 @@ def worker():
         q.task_done()
         print(not q.empty())
         if q.empty():
-            print(FAIL+"waiting"+ENDC)
             continue
         time.sleep(CS * time_unit)
         print(UNDERLINE + "waiting" + ENDC)
@@ -55,12 +56,15 @@ map_unit = PageMap(physical_mem_size, page_size)
 # FCFS simulator model
 
 for sem in simulator_list:
-    simulator = sem
     result = []
     ct = []
     i = 0
+    print(q.all_tasks_done)
     if sem == 'SJF':
+        print(q.empty(), simulator)
         q = queue.PriorityQueue()
+        print('now')
+    simulator = sem
     start_time = time.time()
     for t in table["Arrival Time"].to_numpy():
         if sem == 'FCFS':
@@ -76,11 +80,10 @@ for sem in simulator_list:
         time.sleep(time_unit * wait)
         print(f'Arrival Time of {table["Process ID"][i]} : ', time.time() - start_time)
         i += 1
+    print(f'{q.empty()}' + '-----------',simulator,q.qsize(),)
     q.join()
-
-print(HEADER + "done" + ENDC)
-q.join()
-gantt_charts(result)
-awt = average_waiting_time(table["Arrival Time"].to_numpy(),
-                           table["CPU Burst"].to_numpy(), np.array(ct))
-print('\n' + WARNING + f'average waiting time for FCFS : {awt}' + ENDC)
+    print(result)
+    gantt_charts(result, sem)
+    awt = average_waiting_time(table["Arrival Time"].to_numpy(),
+                               table["CPU Burst"].to_numpy(), np.array(ct))
+    print('\n' + WARNING + f'average waiting time for FCFS : {awt}' + ENDC)

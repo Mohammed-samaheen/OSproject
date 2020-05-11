@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from util.const import *
 
 
-def gantt_charts(data):
+def gantt_charts(data, title):
     ticks = []
     fig = plt.figure(figsize=[6.4, 4.8])
     for i in data:
@@ -15,4 +15,5 @@ def gantt_charts(data):
         line.set_linewidth(2.0)
     plt.yticks([])
     plt.xticks(ticks)
+    plt.title(title)
     plt.show()
