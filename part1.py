@@ -17,14 +17,27 @@ def worker():
         item = q.get()
         if simulator == 'SJF':
             item = item[1]
-
+            # print(f'sjd->{q.qsize()}\n{burst_time}')
         # get the process from ready queue and put it in the cpu
         item.state = "run"                  # chane the state of the process
         time_in = time.time() - start_time  # take the time when the process entered the cpu
         print(OKBLUE + f'Working on {item.process_id}' + ENDC)
 
         # work of the state process by waiting CPU Burst of the process
-        wating_time = table[table["Process ID"] == item.process_id]["CPU Burst"].item()
+        # print(simulator == 'RR')
+        if simulator == 'RR':
+            # print(q.qsize())
+            # print(burst_time[item.process_id] - round_Q > 0,burst_time[item.process_id],
+            #       burst_time[item.process_id] - round_Q )
+            if burst_time[item.process_id] - round_Q > 0:
+                # print('added')
+                wating_time = round_Q
+                burst_time[item.process_id] -= round_Q
+                q.put(item)
+            else:
+                wating_time = burst_time[item.process_id]
+        else:
+            wating_time = table[table["Process ID"] == item.process_id]["CPU Burst"].item()
         time.sleep(time_unit * wating_time)
         time_out = time.time() - start_time  # take the time when the process leave the cpu
         print(OKGREEN + f'Finished {item.process_id} at {time_out} : {int(time_out * 10)}' + ENDC)
@@ -45,6 +58,7 @@ def worker():
 information, table = read_data()
 physical_mem_size, page_size, round_Q, CS = information
 table = table.sort_values(by=['Arrival Time']).reset_index(drop=True)
+burst_time = table["CPU Burst"].to_numpy().copy()
 
 # general variables for cpu time unit and refrain time
 time_unit = 0.1
@@ -61,20 +75,18 @@ for sem in simulator_list:
     result = []     # final result
     ct = []         # complete time for each process
     i = 0
-    print(q.all_tasks_done)
     if sem == 'SJF':
-        print(q.empty(), simulator)
         q = queue.PriorityQueue()
-        print('now')
+
     simulator = sem
     start_time = time.time()
     for t in table["Arrival Time"].to_numpy():
-        if sem == 'FCFS':
+        if sem == 'SJF':
+            q.put((table["CPU Burst"][i], PCB(table["Process ID"][i], map_unit.add_process(table["Size in Bytes"][i]),
+                                           time_in=time.time())))
+        else:
             q.put(PCB(table["Process ID"][i], map_unit.add_process(table["Size in Bytes"][i]),
                       time_in=time.time()))
-        elif sem == 'SJF':
-            q.put((table["CPU Burst"][i], PCB(table["Process ID"][i], map_unit.add_process(table["Size in Bytes"][i]),
-                                              time_in=time.time())))
 
         wait = 0
         if i != table.shape[0] - 1:
@@ -82,10 +94,10 @@ for sem in simulator_list:
         time.sleep(time_unit * wait)
         print(f'Arrival Time of {table["Process ID"][i]} : ', time.time() - start_time)
         i += 1
-    print(f'{q.empty()}' + '-----------', simulator, q.qsize(), )
+
     q.join()
-    print(result)
+
     gantt_charts(result, sem)
-    awt = average_waiting_time(table["Arrival Time"].to_numpy(),
-                               table["CPU Burst"].to_numpy(), np.array(ct))
-    print('\n' + WARNING + f'average waiting time for FCFS : {awt}' + ENDC)
+    # awt = average_waiting_time(table["Arrival Time"].to_numpy(),
+    #                            table["CPU Burst"].to_numpy(), np.array(ct))
+    # print('\n' + WARNING + f'average waiting time for FCFS : {awt}' + ENDC)
