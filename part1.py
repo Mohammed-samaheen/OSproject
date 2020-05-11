@@ -1,5 +1,3 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 import threading, queue
 from util.Preprocessor import *
 import time
@@ -8,21 +6,9 @@ from PageMapModel import *
 from util.const import *
 from GCplot import *
 
-# read the data and and put it in a table
-information, table = read_data()
-physical_mem_size, page_size, round_Q, CS = information
-time_unit = 0.1
-start_time = None
-table = table.sort_values(by=['Arrival Time']).reset_index(drop=True)
 
-frame_num = int(physical_mem_size / page_size)  # number of frame
-
-simulator = 'FCFS'
-# TODO start of part one of the project
-
-q = queue.Queue()
-
-
+# this function work as cpu that process the processes in the ready queue and it's run in
+# diffract thread from the main thread,and it's work for all cpu simulators[FCFS,SJF,RR]
 def worker():
     while True:
         if q.empty():
@@ -49,6 +35,18 @@ def worker():
         time.sleep(CS * time_unit)
         print(UNDERLINE + "waiting" + ENDC)
 
+
+# read the data and and put it in a table
+information, table = read_data()
+physical_mem_size, page_size, round_Q, CS = information
+time_unit = 0.1
+start_time = None
+table = table.sort_values(by=['Arrival Time']).reset_index(drop=True)
+
+frame_num = int(physical_mem_size / page_size)  # number of frame
+
+simulator = 'FCFS'
+q = queue.Queue()
 
 threading.Thread(target=worker, daemon=True).start()
 map_unit = PageMap(physical_mem_size, page_size)
@@ -80,7 +78,7 @@ for sem in simulator_list:
         time.sleep(time_unit * wait)
         print(f'Arrival Time of {table["Process ID"][i]} : ', time.time() - start_time)
         i += 1
-    print(f'{q.empty()}' + '-----------',simulator,q.qsize(),)
+    print(f'{q.empty()}' + '-----------', simulator, q.qsize(), )
     q.join()
     print(result)
     gantt_charts(result, sem)
