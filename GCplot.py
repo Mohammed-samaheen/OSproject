@@ -25,4 +25,5 @@ def gantt_charts(data, title):
     plt.yticks([])
     plt.xticks(ticks)
     plt.title(title)
+    # plt.savefig('./result/test4/'+title)
     plt.show()
