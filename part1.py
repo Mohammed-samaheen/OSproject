@@ -27,7 +27,6 @@ def worker():
         # work of the state process by waiting CPU Burst of the process
         if simulator == 'RR':
             p_burst = burst_time.loc[burst_time["Process ID"] == item.process_id, 'CPU Burst'].item()
-
             if p_burst - round_Q > 0:
                 wating_time = round_Q
                 finished = False
@@ -37,6 +36,7 @@ def worker():
             burst_time.loc[burst_time["Process ID"] == item.process_id, 'CPU Burst'] -= wating_time
         else:
             wating_time = table[table["Process ID"] == item.process_id]["CPU Burst"].item()
+
         time.sleep(time_unit * wating_time)
         time_out = time.time() - start_time  # take the time when the process leave the cpu
         print(OKGREEN + f'Finished {item.process_id} at {time_out} : {int(time_out * 10)}' + ENDC)
