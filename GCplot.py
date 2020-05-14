@@ -1,3 +1,5 @@
+from itertools import product
+
 import numpy as np
 import matplotlib.pyplot as plt
 from util.const import *
@@ -25,5 +27,5 @@ def grantt_charts(data, title):
     plt.yticks([])
     plt.xticks(ticks)
     plt.title(title)
-    # plt.savefig('./result/test4/'+title)
+    # plt.savefig(title)
     plt.show()

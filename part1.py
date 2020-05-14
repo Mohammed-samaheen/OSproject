@@ -98,7 +98,7 @@ for sem in simulator_list:
         i += 1
 
     q.join()
-
+    print(result)
     grantt_charts(result, sem)
     awt = average_waiting_time(table["Arrival Time"].to_numpy(),
                                table["CPU Burst"].to_numpy(), np.array(ct))

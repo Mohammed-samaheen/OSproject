@@ -3,7 +3,7 @@ import numpy as np
 
 
 def read_data(file_name='processes.txt'):
-    with open('./processes.txt', 'r+') as d:
+    with open('processes.txt', 'r+') as d:
         content = d.readlines()
 
     information = tuple(map(int, content[:4]))
