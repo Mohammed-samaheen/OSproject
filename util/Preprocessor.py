@@ -16,9 +16,11 @@ def read_data(file_name='processes.txt'):
     return information, table
 
 
-def average_waiting_time(at, bt, ct):
-    tat = ct - at
-    return (tat - bt).mean()
+def summary(table):
+    table["Turnaround Time"] = table["Finish time"] - table["Arrival Time"]
+    table["Waiting Time"] = table["Turnaround Time"] - table["CPU Burst"]
+
+    return table, table["Turnaround Time"].mean(), table["Waiting Time"].mean()
 
 
 def cpu_utilization(data):

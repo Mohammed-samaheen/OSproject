@@ -25,16 +25,16 @@ def worker():
         print(OKBLUE + f'Working on {item.process_id}' + ENDC)
 
         # work of the state process by waiting CPU Burst of the process
-        # print(simulator == 'RR')
         if simulator == 'RR':
-            if burst_time[item.process_id] - round_Q > 0:
+            p_burst = burst_time.loc[burst_time["Process ID"] == item.process_id, 'CPU Burst'].item()
+
+            if p_burst - round_Q > 0:
                 wating_time = round_Q
-                burst_time[item.process_id] -= round_Q
-                q.put(item)
                 finished = False
             else:
-                wating_time = burst_time[item.process_id]
+                wating_time = p_burst
                 finished = True
+            burst_time.loc[burst_time["Process ID"] == item.process_id, 'CPU Burst'] -= wating_time
         else:
             wating_time = table[table["Process ID"] == item.process_id]["CPU Burst"].item()
         time.sleep(time_unit * wating_time)
@@ -43,7 +43,9 @@ def worker():
 
         # recoded the result
         if finished:
-            ct.append(int(time_out * 10))
+            copy_table.loc[copy_table["Process ID"] == item.process_id, 'Finish time'] = int(time_out * 10)
+        else:
+            q.put(item)
         result.append((item.process_id, int(time_in * 10), int(time_out * 10)))
 
         # remove the process and free the memory from it
@@ -58,7 +60,7 @@ def worker():
 information, table = read_data()
 physical_mem_size, page_size, round_Q, CS = information
 table = table.sort_values(by=['Arrival Time']).reset_index(drop=True)
-burst_time = table["CPU Burst"].to_numpy().copy()
+burst_time = table[['Process ID', 'CPU Burst']].copy()
 
 # general variables for cpu time unit and refrain time
 time_unit = 0.1
@@ -72,7 +74,8 @@ map_unit = PageMap(physical_mem_size, page_size)  # map unit between pages and f
 # iteration for all simulator mode and find the result for each of them
 for sem in simulator_list:
     result = []  # final result
-    ct = []  # complete time for each process
+    copy_table = table.copy()
+    copy_table["Finish time"] = np.zeros(table.shape[0])  # complete time for each process
     i = 0
     if sem == 'SJF':
         q = queue.PriorityQueue()
@@ -94,13 +97,19 @@ for sem in simulator_list:
             wait = table["Arrival Time"][i + 1] - t
 
         time.sleep(time_unit * wait)
-
         i += 1
 
     q.join()
-    print(result)
+
     grantt_charts(result, sem)
-    awt = average_waiting_time(table["Arrival Time"].to_numpy(),
-                               table["CPU Burst"].to_numpy(), np.array(ct))
-    print('\n' + WARNING + f'average waiting time for {sem} : {awt}' + ENDC)
-    print('\n' + WARNING + f'cpu utilization for {sem} : {cpu_utilization(result)}' + ENDC + '\n')
+    result_table, average_turnaround_time, average_waiting_time = summary(copy_table)
+
+    desired_width = 320
+    pd.set_option('display.width', desired_width)
+    pd.set_option('display.max_columns', None)
+
+    print(result_table)
+    print('\n' + WARNING + f'average turnaround time for {sem} : {average_turnaround_time}' + ENDC)
+    print(WARNING + f'average waiting time for {sem} : {average_waiting_time}' + ENDC)
+    print(WARNING + f'cpu utilization for {sem} : {cpu_utilization(result)}' + ENDC + '\n')
+    print(OKBLUE+'----------------'*6+ENDC+'\n')
