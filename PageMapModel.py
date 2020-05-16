@@ -59,3 +59,13 @@ class PageMap:
 
         self.frame_state.put(mem_frame, 0)
         self.frame_value.put(mem_frame, 0)
+
+    def allocate_frame(self, process_size, logical_address):
+        cumulative_mem = np.arange(start=0, stop=self.physical_mem_size, step=self.page_size)
+        cumulative_process = np.arange(start=0, stop=process_size, step=self.page_size)
+
+        for i in cumulative_process:
+            if logical_address <= cumulative_process:
+                expected_page = i-1
+
+        #still needs some additional code
