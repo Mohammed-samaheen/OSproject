@@ -59,3 +59,18 @@ class PageMap:
 
         self.frame_state.put(mem_frame, 0)
         self.frame_value.put(mem_frame, 0)
+
+    def map_address(self, logical_address, page_table):
+        p = int(logical_address / self.page_size)
+
+        if p > page_table["page-number"].max():
+            return 'out of range'
+
+        location = page_table[page_table["page-number"] == p]["map-value"].item()
+
+        if location == 'HDD':
+            return location
+
+        d = logical_address % self.page_size
+
+        return int(location) * self.page_size + d
